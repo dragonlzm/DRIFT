@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRIFT: A Residual Flow Adapter for Decoding Continuous Outputs in Vision-Language Models</title>
+    <meta name="description" content="DRIFT adapts pretrained vision-language models to continuous decoding tasks with a residual flow adapter.">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <meta name="robots" content="all">
+    <meta content="en_GB" property="og:locale">
+    <meta content="website" property="og:type">
+    <meta content="DRIFT" property="og:title">
+    <meta content="A Residual Flow Adapter for Decoding Continuous Outputs in Vision-Language Models" property="og:description">
+    <meta content="assets/figures/home_page_teaser.png" property="og:image">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DRIFT">
+    <meta name="twitter:description" content="A residual flow adapter for continuous outputs in vision-language models.">
+    <meta name="twitter:image:src" content="assets/figures/home_page_teaser.png">
+
+    <link rel="stylesheet" type="text/css" media="all" href="assets/stylesheets/main_free.css">
+    <link href="assets/fontawesome-free-6.6.0-web/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/foundation.min.css">
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            "HTML-CSS": {
+                scale: 95,
+                fonts: ["Gyre-Pagella"],
+                imageFont: null,
+                undefinedFamily: "'Arial Unicode MS', cmbright"
+            },
+            tex2jax: {
+                inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                processEscapes: true
+            }
+        });
+    </script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <style>
+        :root {
+            --drift-ink: #14191f;
+            --drift-muted: #5f6872;
+            --drift-line: #d9e0e6;
+            --drift-panel: #f4f7f9;
+            --drift-blue: #235a8c;
+            --drift-teal: #1f756f;
+            --drift-warm: #a65f2b;
+        }
+
+        body {
+            color: var(--drift-ink);
+        }
+
+        div.container.blog#first-content {
+            background: linear-gradient(120deg, #eef4f6 0%, #e4ecef 52%, #f5f3ec 100%);
+        }
+
+        div.container.blog#first-content div.blog-title .blog-cover img.foreground {
+            border: 1px solid rgba(20, 25, 31, 0.12);
+            box-shadow: 0 24px 80px rgba(20, 25, 31, 0.18);
+            object-fit: cover;
+        }
+
+        div.container.blog#first-content div.blog-title .blog-cover img.background {
+            opacity: 0.16;
+            filter: blur(14px);
+        }
+
+        .resource-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .resource-row .button {
+            margin: 0;
+        }
+
+        .button.pending {
+            background: rgba(255, 255, 255, 0.36);
+            color: rgba(20, 25, 31, 0.56);
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            color: var(--drift-blue);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .lead {
+            color: var(--drift-muted);
+            font-size: 1.08rem;
+            line-height: 1.75;
+        }
+
+        .author-note {
+            color: var(--drift-muted);
+            font-size: 0.9rem;
+            margin-top: -4px;
+        }
+
+        .callout {
+            background: var(--drift-panel);
+            border-left: 4px solid var(--drift-blue);
+            margin: 28px 0;
+            padding: 22px 26px;
+        }
+
+        .callout p {
+            margin-bottom: 0;
+        }
+
+        .stat-grid,
+        .task-grid,
+        .resource-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .demo-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .vla-video-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-top: 24px;
+        }
+
+        .vtg-visualization-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-top: 24px;
+        }
+
+        .stat-card,
+        .task-card,
+        .resource-card {
+            background: #ffffff;
+            border: 1px solid var(--drift-line);
+            border-radius: 8px;
+            padding: 22px;
+        }
+
+        .stat-card h3,
+        .task-card h3,
+        .resource-card h3 {
+            font-size: 1.05rem;
+            margin: 0 0 10px;
+        }
+
+        .stat-card p,
+        .task-card p,
+        .resource-card p {
+            color: var(--drift-muted);
+            font-size: 0.94rem;
+            line-height: 1.55;
+            margin-bottom: 0;
+        }
+
+        .task-card .tag {
+            align-items: center;
+            background: #eef4f6;
+            border: 1px solid var(--drift-line);
+            border-radius: 999px;
+            color: var(--drift-blue);
+            display: inline-flex;
+            font-size: 0.75rem;
+            font-weight: 700;
+            gap: 7px;
+            margin-bottom: 14px;
+            padding: 6px 10px;
+        }
+
+        .method-flow {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            margin-top: 24px;
+        }
+
+        .method-figure {
+            margin: 26px auto 8px;
+            max-width: 360px;
+        }
+
+        .method-figure img {
+            border: 1px solid var(--drift-line);
+            border-radius: 8px;
+            display: block;
+            width: 100%;
+        }
+
+        .method-step {
+            background: #ffffff;
+            border: 1px solid var(--drift-line);
+            border-radius: 8px;
+            padding: 22px;
+            min-height: 155px;
+        }
+
+        .method-step h3 {
+            color: var(--drift-blue);
+            font-size: 1rem;
+            margin: 0 0 9px;
+        }
+
+        .method-step p {
+            color: var(--drift-muted);
+            font-size: 0.92rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+
+        .flow-arrow {
+            align-items: center;
+            color: var(--drift-teal);
+            display: flex;
+            font-size: 1.2rem;
+            justify-content: center;
+        }
+
+        .performance-lead {
+            margin-bottom: 14px;
+        }
+
+        #performance-results {
+            padding-left: 6vw;
+            padding-right: 6vw;
+        }
+
+        .result-table-block {
+            background: #ffffff;
+            border: 1px solid var(--drift-line);
+            border-radius: 8px;
+            margin: 18px auto;
+            overflow: hidden;
+            width: 80%;
+        }
+
+        .result-table-header {
+            border-bottom: 1px solid var(--drift-line);
+            padding: 18px 20px 12px;
+        }
+
+        .result-table-header h3 {
+            color: var(--drift-blue);
+            font-size: 1.04rem;
+            margin: 0 0 4px;
+            padding: 0;
+        }
+
+        .result-table-header p {
+            color: var(--drift-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .result-table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: var(--table-width, 100%);
+            margin: 0 auto;
+        }
+
+        #vla .result-table {
+            --table-width: min(1180px, 90%);
+        }
+
+        #tvg .result-table {
+            --table-width: min(1240px, 90%);
+        }
+
+        .result-table.compact {
+            margin: 0 auto;
+        }
+
+        #spatial-grounding .result-table {
+            --table-width: min(760px, 90%);
+        }
+
+        #fastwam .result-table {
+            --table-width: min(720px, 90%);
+        }
+
+        .result-table th,
+        .result-table td {
+            border-bottom: 1px solid rgba(217, 224, 230, 0.86);
+            color: var(--drift-ink);
+            font-size: 0.72rem;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+            padding: 7px 6px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .result-table th {
+            background: #f7fafb;
+            color: #26313b;
+            font-weight: 700;
+            overflow-wrap: normal;
+        }
+
+        .result-table td.num,
+        .result-table th.num {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .result-table th.group-head {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .result-table th:last-child,
+        .result-table td:last-child {
+            padding-right: 22px;
+        }
+
+        #vla .result-table th:nth-child(1),
+        #vla .result-table td:nth-child(1) {
+            width: 13%;
+        }
+
+        #vla .result-table th:nth-child(2),
+        #vla .result-table td:nth-child(2) {
+            width: 16%;
+        }
+
+        #vla .result-table th:nth-child(3),
+        #vla .result-table td:nth-child(3) {
+            width: 15%;
+        }
+
+        #tvg .result-table th:first-child,
+        #tvg .result-table td:first-child {
+            width: 15%;
+        }
+
+        #tvg .result-table th:nth-child(2),
+        #tvg .result-table td:nth-child(2) {
+            width: 8%;
+        }
+
+        #spatial-grounding .result-table th:first-child,
+        #spatial-grounding .result-table td:first-child,
+        #fastwam .result-table th:first-child,
+        #fastwam .result-table td:first-child {
+            width: 34%;
+        }
+
+        .result-table .group-row td {
+            background: #fbfcfd;
+            color: var(--drift-muted);
+            font-style: italic;
+            font-weight: 700;
+        }
+
+        .result-table .drift-row td {
+            background: #eaf4ff;
+        }
+
+        .result-table .reference-row td {
+            background: #edfbd6;
+        }
+
+        .result-table .blue-row td {
+            background: #eaf4ff;
+        }
+
+        .result-table .green-row td {
+            background: #edfbd6;
+        }
+
+        .result-table .plain-row td {
+            background: #ffffff;
+        }
+
+        .result-table .best {
+            font-weight: 700;
+        }
+
+        .result-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .demo-slot {
+            background:
+                linear-gradient(135deg, rgba(35, 90, 140, 0.10), rgba(31, 117, 111, 0.08)),
+                repeating-linear-gradient(45deg, rgba(20, 25, 31, 0.035) 0 1px, transparent 1px 12px);
+            border: 1px dashed rgba(35, 90, 140, 0.38);
+            border-radius: 8px;
+            min-height: 190px;
+            padding: 24px;
+        }
+
+        .demo-slot h3 {
+            margin: 0 0 10px;
+        }
+
+        .demo-slot p {
+            color: var(--drift-muted);
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        .qualitative-subheading {
+            color: var(--drift-blue);
+            font-size: 1.2rem;
+            margin: 0 0 8px;
+        }
+
+        .qualitative-lead {
+            color: var(--drift-muted);
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        .vla-video-card {
+            background: #ffffff;
+            border: 1px solid var(--drift-line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .vla-video-card video {
+            aspect-ratio: 244 / 65;
+            background: #101820;
+            display: block;
+            object-fit: contain;
+            width: 100%;
+        }
+
+        .vla-video-caption {
+            padding: 14px 16px 16px;
+        }
+
+        .vla-video-caption h3 {
+            color: var(--drift-blue);
+            font-size: 1rem;
+            margin: 0 0 6px;
+        }
+
+        .vla-video-caption p {
+            color: var(--drift-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .vtg-visualization-card {
+            background: #ffffff;
+            border: 1px solid var(--drift-line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .vtg-visualization-card img {
+            display: block;
+            width: 100%;
+        }
+
+        .vtg-visualization-card figcaption {
+            color: var(--drift-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            padding: 12px 16px 14px;
+        }
+
+        .timeline {
+            border-left: 2px solid var(--drift-line);
+            margin-top: 18px;
+            padding-left: 24px;
+        }
+
+        .timeline-item {
+            margin-bottom: 22px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            background: var(--drift-warm);
+            border-radius: 50%;
+            content: "";
+            height: 11px;
+            left: -30px;
+            position: absolute;
+            top: 8px;
+            width: 11px;
+        }
+
+        .timeline-item h3 {
+            font-size: 1.02rem;
+            margin-bottom: 6px;
+        }
+
+        .timeline-item p {
+            color: var(--drift-muted);
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        footer {
+            margin-top: 50px;
+        }
+
+        @media screen and (max-width: 920px) {
+            .stat-grid,
+            .task-grid,
+            .resource-grid,
+            .demo-grid,
+            .vla-video-grid,
+            .vtg-visualization-grid,
+            .method-flow {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container blog" id="first-content">
+        <div class="blog-title">
+            <div class="blog-intro">
+                <div>
+                    <p class="eyebrow">Vision-Language Models for Continuous Outputs</p>
+                    <h1 class="title">DRIFT: A Residual Flow Adapter for Decoding Continuous Outputs in Vision-Language Models</h1>
+                    <p class="author">Zhuoming Liu<sup>*</sup>, Jinhong Lin<sup>*</sup>, Kwan Man Cheng, Lin Zhang, Shayok Bagchi, Yin Li</p>
+                    <p class="author-note"><sup>*</sup>Co-first Author</p>
+                    <p class="abstract">
+                        DRIFT adapts pretrained vision-language models to tasks that require precise continuous predictions. It couples a base predictor, which provides a coarse target estimate, with a flow-matching residual refinement module that iteratively improves the output around that prior.
+                    </p>
+                </div>
+
+                <div class="info">
+                    <div class="resource-row">
+                        <!-- TODO: Replace CODE_URL with the public repository URL. -->
+                        <a href="https://github.com/dragonlzm/DRIFT" class="button icon">Code <i class="fa-solid fa-code"></i></a>
+                        <!-- TODO: Replace HUGGINGFACE_URL with the model, dataset, or Space URL. -->
+                        <a href="#" class="button icon pending" aria-disabled="true">Hugging Face <i class="fa-regular fa-face-smile"></i></a>
+                        <!-- TODO: Replace ARXIV_URL with the arXiv abstract URL once released. -->
+                        <a href="#" class="button icon pending" aria-disabled="true">arXiv <i class="fa-solid fa-scroll"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-cover">
+                <img class="foreground" src="assets/figures/home_page_teaser.png" alt="DRIFT project teaser figure">
+                <img class="background" src="assets/figures/home_page_teaser.png" alt="">
+            </div>
+        </div>
+    </div>
+
+    <div class="container blog main first" id="blog-main">
+        <h1>Introduction</h1>
+        <p class="text">
+            Many modern vision-language models (VLMs) build on autoregressive decoding of discrete tokens. While text-based output interfaces enable scalable pretraining and strong zero-shot generalization across diverse tasks, they are poorly suited for problems that require precise continuous outputs, such as localizing temporal boundaries of events or generating robotic control actions.
+        </p>
+        <p class="text">
+            To address this challenge, we propose DRIFT, a general framework for adapting pretrained VLMs to continuous decoding tasks. DRIFT combines a base predictor, which provides a coarse estimate of the target output, with a generative refinement module based on flow matching that iteratively improves the prediction.
+        </p>
+        <p class="text">
+            This residual formulation transforms the generative modeling problem from learning a global output distribution to modeling a localized residual distribution around a strong prior, substantially simplifying optimization. We evaluate DRIFT on both perception and planning tasks, including visual grounding and robotic control. Across multiple tasks and architectures spanning Multi-modal Large Language Models (MLLMs), Vision-Language-Action Models (VLAs), and World Action Models (WAMs), DRIFT consistently outperforms a strong set of regression- and generative-based baselines.
+        </p>
+    </div>
+
+    <div class="container blog main gray">
+        <div class="stat-grid">
+            <div class="stat-card">
+                <h3>Problem</h3>
+                <p>Discrete token decoding is convenient for language, but can introduce quantization errors and discard ordinal structure in continuous prediction tasks.</p>
+            </div>
+            <div class="stat-card">
+                <h3>Core Idea</h3>
+                <p>Leverage the knowledge in the pretrained VLMs and use a light weight module to predict strong prior, then learn a residual flow that refines the coarse prediction into a precise continuous output.</p>
+            </div>
+            <div class="stat-card">
+                <h3>Scope</h3>
+                <p>The adapter is designed for MLLMs, VLAs, and world-action models in perception and planning settings.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container blog main">
+        <h1>Method Overview</h1>
+        <p class="lead">
+            DRIFT preserves the knowledge and transfer behavior of pretrained vision-language backbones while adding a compact continuous decoder. The base predictor gives the adapter a useful starting point; the residual flow focuses its capacity on the remaining correction.
+        </p>
+
+        <figure class="method-figure">
+            <img src="assets/figures/home_page_method.png" alt="Overview of the DRIFT residual flow adapter method">
+        </figure>
+
+        <div class="method-flow">
+            <div class="method-step">
+                <h3>1. Pretrained VLM</h3>
+                <p>Visual and language context are encoded by an existing model trained with a discrete autoregressive interface.</p>
+            </div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="method-step">
+                <h3>2. Base Predictor</h3>
+                <p>A base predictor estimates the continuous target base on the information in the special tokens, creating a strong prior close to the final answer.</p>
+            </div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="method-step">
+                <h3>3. Residual Flow</h3>
+                <p>A flow-matching refinement module models the residual from base predictor to the final answer and iteratively improves the prediction.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container blog main">
+        <h1>Performance</h1>
+        <p class="text performance-lead">
+            DRIFT consistently improves continuous decoding across action generation, temporal localization, spatial grounding, and world-action modeling. Tables report the headline numbers from the results figures.
+        </p>
+    </div>
+
+    <div class="container blog extra-large gray" id="performance-results">
+        <div class="result-table-block" id="vla">
+            <div class="result-table-header">
+                <h3><i class="fa-solid fa-robot"></i> Vision-Language-Action</h3>
+                <p>Action success rates on Libero and Simpler. Higher is better.</p>
+            </div>
+            <div class="table-scroll">
+                <table class="result-table" aria-label="Vision-Language-Action benchmark results">
+                    <colgroup>
+                        <col style="width: 13%;">
+                        <col style="width: 16%;">
+                        <col style="width: 15%;">
+                        <col style="width: 9%;">
+                        <col style="width: 9%;">
+                        <col style="width: 9%;">
+                        <col style="width: 9%;">
+                        <col style="width: 9%;">
+                        <col style="width: 11%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th scope="col" rowspan="2">Method</th>
+                            <th scope="col" rowspan="2">Base Model</th>
+                            <th scope="col" rowspan="2">Action Decoder</th>
+                            <th scope="colgroup" colspan="5" class="group-head">Libero</th>
+                            <th scope="col" rowspan="2" class="num">Simpler</th>
+                        </tr>
+                        <tr>
+                            <th scope="col" class="num">Spatial</th>
+                            <th scope="col" class="num">Object</th>
+                            <th scope="col" class="num">Goal</th>
+                            <th scope="col" class="num">Long</th>
+                            <th scope="col" class="num">AVG</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="reference-row">
+                            <td>OpenVLA* [20]</td>
+                            <td>Prismatic-7B [17]</td>
+                            <td>Tokenizer</td>
+                            <td class="num">83.1</td>
+                            <td class="num">88.5</td>
+                            <td class="num">76.4</td>
+                            <td class="num">54.1</td>
+                            <td class="num">75.5</td>
+                            <td class="num">7.7</td>
+                        </tr>
+                        <tr class="blue-row">
+                            <td>VLM4VLA [69]</td>
+                            <td>Qwen3-VL-2B [2]</td>
+                            <td>MLP</td>
+                            <td class="num">N/A</td>
+                            <td class="num">N/A</td>
+                            <td class="num">N/A</td>
+                            <td class="num">55.8</td>
+                            <td class="num">N/A</td>
+                            <td class="num">49.0</td>
+                        </tr>
+                        <tr class="plain-row">
+                            <td>InternVLA [7]</td>
+                            <td>Qwen2.5-VL-3B [3]</td>
+                            <td>Diffusion</td>
+                            <td class="num">98.0</td>
+                            <td class="num">99.0</td>
+                            <td class="num">93.8</td>
+                            <td class="num">92.6</td>
+                            <td class="num">95.8</td>
+                            <td class="num">54.2</td>
+                        </tr>
+                        <tr class="drift-row green-row">
+                            <td>DRIFT</td>
+                            <td>OpenVLA-7B [20]</td>
+                            <td>DRIFT-Tokenizer</td>
+                            <td class="num">87.0</td>
+                            <td class="num">89.1</td>
+                            <td class="num">77.5</td>
+                            <td class="num">57.0</td>
+                            <td class="num">77.7</td>
+                            <td class="num">13.5</td>
+                        </tr>
+                        <tr class="drift-row">
+                            <td>DRIFT</td>
+                            <td>Qwen3-VL-2B [2]</td>
+                            <td>DRIFT-MLP</td>
+                            <td class="num best">98.8</td>
+                            <td class="num best">99.2</td>
+                            <td class="num">97.0</td>
+                            <td class="num best">96.4</td>
+                            <td class="num best">97.9</td>
+                            <td class="num best">61.5</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="result-table-block" id="tvg">
+            <div class="result-table-header">
+                <h3><i class="fa-solid fa-video"></i> Temporal Video Grounding</h3>
+                <p>Zero-shot generalization on Charades-STA and ActivityNet-Captions. Higher is better.</p>
+            </div>
+            <div class="table-scroll">
+                <table class="result-table" aria-label="Temporal Video Grounding benchmark results">
+                    <colgroup>
+                        <col style="width: 15%;">
+                        <col style="width: 8%;">
+                        <col style="width: 9.625%;">
+                        <col style="width: 9.625%;">
+                        <col style="width: 9.625%;">
+                        <col style="width: 9.625%;">
+                        <col style="width: 9.625%;">
+                        <col style="width: 9.625%;">
+                        <col style="width: 9.625%;">
+                        <col style="width: 9.625%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th scope="col" rowspan="2">Method</th>
+                            <th scope="col" rowspan="2" class="num"># Train</th>
+                            <th scope="colgroup" colspan="4" class="group-head">Charades-STA</th>
+                            <th scope="colgroup" colspan="4" class="group-head">ActivityNet-Captions</th>
+                        </tr>
+                        <tr>
+                            <th scope="col" class="num">R@0.3</th>
+                            <th scope="col" class="num">R@0.5</th>
+                            <th scope="col" class="num">R@0.7</th>
+                            <th scope="col" class="num">mIoU</th>
+                            <th scope="col" class="num">R@0.3</th>
+                            <th scope="col" class="num">R@0.5</th>
+                            <th scope="col" class="num">R@0.7</th>
+                            <th scope="col" class="num">mIoU</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="plain-row">
+                            <td>LT-ZVG [19]</td>
+                            <td class="num">-</td>
+                            <td class="num">52.9</td>
+                            <td class="num">37.2</td>
+                            <td class="num">19.3</td>
+                            <td class="num">36.0</td>
+                            <td class="num">47.6</td>
+                            <td class="num">32.6</td>
+                            <td class="num">15.4</td>
+                            <td class="num">31.8</td>
+                        </tr>
+                        <tr class="plain-row">
+                            <td>ED-VTG [44]</td>
+                            <td class="num">136K</td>
+                            <td class="num">59.5</td>
+                            <td class="num">39.3</td>
+                            <td class="num">19.8</td>
+                            <td class="num">40.2</td>
+                            <td class="num">52.1</td>
+                            <td class="num">33.1</td>
+                            <td class="num best">16.0</td>
+                            <td class="num">35.2</td>
+                        </tr>
+                        <tr class="plain-row">
+                            <td>ET-Chat [32]</td>
+                            <td class="num">164K</td>
+                            <td class="num">65.7</td>
+                            <td class="num best">45.9</td>
+                            <td class="num">20.0</td>
+                            <td class="num">42.3</td>
+                            <td class="num">24.1</td>
+                            <td class="num">12.7</td>
+                            <td class="num">6.2</td>
+                            <td class="num">18.9</td>
+                        </tr>
+                        <tr class="drift-row">
+                            <td>DRIFT (ET-Chat)</td>
+                            <td class="num">100K</td>
+                            <td class="num best">67.2</td>
+                            <td class="num">44.8</td>
+                            <td class="num best">20.6</td>
+                            <td class="num best">43.8</td>
+                            <td class="num best">57.9</td>
+                            <td class="num best">35.8</td>
+                            <td class="num">14.1</td>
+                            <td class="num best">37.3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="result-table-block" id="spatial-grounding">
+            <div class="result-table-header">
+                <h3><i class="fa-solid fa-crosshairs"></i> Spatial Grounding</h3>
+                <p>RefCOCO benchmark accuracy with Qwen3-VL-2B. Higher is better.</p>
+            </div>
+            <div class="table-scroll">
+                <table class="result-table compact" aria-label="Spatial grounding benchmark results">
+                    <thead>
+                        <tr>
+                            <th scope="col">Method</th>
+                            <th scope="col" class="num">refcoco</th>
+                            <th scope="col" class="num">refcoco+</th>
+                            <th scope="col" class="num">refcocog</th>
+                            <th scope="col" class="num">AVG</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="plain-row">
+                            <td>Qwen-VL [2]</td>
+                            <td class="num">89.6</td>
+                            <td class="num">81.8</td>
+                            <td class="num">85.5</td>
+                            <td class="num">85.6</td>
+                        </tr>
+                        <tr class="drift-row">
+                            <td>Qwen-VL (w/ DRIFT)</td>
+                            <td class="num best">91.7</td>
+                            <td class="num best">85.8</td>
+                            <td class="num best">87.9</td>
+                            <td class="num best">88.5</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="result-table-block" id="fastwam">
+            <div class="result-table-header">
+                <h3><i class="fa-solid fa-gauge-high"></i> World Action Models</h3>
+                <p>Libero benchmark results for FastWAM with and without DRIFT. Higher is better.</p>
+            </div>
+            <div class="table-scroll">
+                <table class="result-table compact" aria-label="World Action Model benchmark results">
+                    <thead>
+                        <tr>
+                            <th scope="col">Method</th>
+                            <th scope="col" class="num">Spatial</th>
+                            <th scope="col" class="num">Object</th>
+                            <th scope="col" class="num">Goal</th>
+                            <th scope="col" class="num">Long</th>
+                            <th scope="col" class="num">AVG</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="plain-row">
+                            <td>FastWAM [65]</td>
+                            <td class="num">97.6</td>
+                            <td class="num best">99.4</td>
+                            <td class="num">95.6</td>
+                            <td class="num">95.0</td>
+                            <td class="num">96.9</td>
+                        </tr>
+                        <tr class="drift-row">
+                            <td>FastWAM (w/ DRIFT)</td>
+                            <td class="num best">99.2</td>
+                            <td class="num">99.0</td>
+                            <td class="num best">98.2</td>
+                            <td class="num best">96.2</td>
+                            <td class="num best">98.2</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="container blog main">
+        <h1>Qualitative Results</h1>
+        <p class="text">
+            Visual examples for action rollouts and temporal grounding, showing how residual flow refinement improves continuous outputs.
+        </p>
+    </div>
+
+    <div class="container blog extra-large gray-linear">
+        <h2 class="qualitative-subheading">Vision-Language-Action</h2>
+        <p class="qualitative-lead">
+            DRIFT rollout examples across LIBERO-style manipulation tasks.
+        </p>
+        <div class="vla-video-grid">
+            <figure class="vla-video-card">
+                <video controls preload="metadata" playsinline muted>
+                    <source src="assets/videos/vla/task0.mp4" type="video/mp4">
+                </video>
+                <figcaption class="vla-video-caption">
+                    <h3>Put both the alphabet soup and the tomato sauce in the basket.</h3>
+                    <p>DRIFT predicts a more accurate action to avoid knock down other boxes on the table.</p>
+                </figcaption>
+            </figure>
+            <figure class="vla-video-card">
+                <video controls preload="metadata" playsinline muted>
+                    <source src="assets/videos/vla/task2.mp4" type="video/mp4">
+                </video>
+                <figcaption class="vla-video-caption">
+                    <h3>Turn on the stove and put the moka pot on it.</h3>
+                    <p>DRIFT has higher success rate in picking up the moka pot.</p>
+                </figcaption>
+            </figure>
+            <figure class="vla-video-card">
+                <video controls preload="metadata" playsinline muted>
+                    <source src="assets/videos/vla/task6.mp4" type="video/mp4">
+                </video>
+                <figcaption class="vla-video-caption">
+                    <h3>Put the white mug on the plate and place the chocolate pudding to the right of the plate.</h3>
+                    <p>DRIFT place the cup on the plate precisel by iterative refine the action.</p>
+                </figcaption>
+            </figure>
+            <figure class="vla-video-card">
+                <video controls preload="metadata" playsinline muted>
+                    <source src="assets/videos/vla/task8.mp4" type="video/mp4">
+                </video>
+                <figcaption class="vla-video-caption">
+                    <h3>Put both moka pots on the stove.</h3>
+                    <p>Shared failure case in picking up the moka pot, which require deeper physical understanding of the object.</p>
+                </figcaption>
+            </figure>
+        </div>
+    </div>
+
+    <div class="container blog extra-large gray">
+        <h2 class="qualitative-subheading">Temporal Video Grounding</h2>
+        <p class="qualitative-lead">
+            Qualitative VTG examples compare the localized temporal window with the reference segment.
+        </p>
+        <div class="vtg-visualization-grid">
+            <figure class="vtg-visualization-card">
+                <img src="assets/figures/vtg_visualization1.png" alt="Temporal video grounding visualization example 1">
+                <figcaption class="vla-video-caption">
+                    <h3>Localize the video moment according to the query 'a person reads a book'. </h3>
+                    <p>DRIFT predicts a more accurate action boundary by iteratively refining the coarse prediction from base predictor.</p>
+                </figcaption>
+            </figure>
+            <figure class="vtg-visualization-card">
+                <img src="assets/figures/vtg_visualization2.png" alt="Temporal video grounding visualization example 2">
+                <figcaption class="vla-video-caption">
+                    <h3>Localize the video moment according to the query 'person take a drink from their water bottle'. </h3>
+                    <p>DRIFT predicts a more accurate action boundary by iteratively refining the coarse prediction from base predictor.</p>
+                </figcaption>
+            </figure>
+            <figure class="vtg-visualization-card">
+                <img src="assets/figures/vtg_visualization3.png" alt="Temporal video grounding visualization example 3">
+                <figcaption class="vla-video-caption">
+                    <h3>Localize the video moment according to the query 'person walking around drinking from glass'. </h3>
+                    <p>DRIFT predicts a more accurate action boundary by iteratively refining the coarse prediction from base predictor.</p>
+                </figcaption>
+            </figure>
+            <figure class="vtg-visualization-card">
+                <img src="assets/figures/vtg_visualization4.png" alt="Temporal video grounding visualization example 4">
+                <figcaption class="vla-video-caption">
+                    <h3>Localize the video moment according to the query 'a person sits on a bed'.</h3>
+                    <p>The shared error pattern caused by ambigurity in the text query.</p>
+                </figcaption>
+            </figure>
+        </div>
+    </div>
+
+    <div class="container blog main">
+        <h1>Resources</h1>
+        <p class="text">
+            The release links are exposed on the main page now so the project can be updated by replacing the placeholder URLs.
+        </p>
+
+        <div class="resource-grid">
+            <div class="resource-card">
+                <h3><i class="fa-regular fa-file-pdf"></i> Paper</h3>
+                <p>Slot prepared for the arXiv paper link once the public manuscript is released.</p>
+            </div>
+            <div class="resource-card">
+                <h3><i class="fa-solid fa-code"></i> Code</h3>
+                <p>Slot prepared for the implementation repository. Replace the homepage button href with the public code URL.</p>
+            </div>
+            <div class="resource-card">
+                <h3><i class="fa-regular fa-face-smile"></i> Hugging Face</h3>
+                <p>Slot prepared for model checkpoints, datasets, or an interactive Space.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container blog main">
+        <h1>What To Add Next</h1>
+        <div class="timeline">
+            <div class="timeline-item">
+                <h3>Training Code</h3>
+                <p>We will release the training code on github repository shortly.</p>
+            </div>
+            <div class="timeline-item">
+                <h3>Adaptor Checkpoints</h3>
+                <p>We will release the adaptor checkpoints in Huggingface shortly.</p>
+            </div>
+            <!-- <div class="timeline-item">
+                <h3>Release Links</h3>
+                <p>Update the prepared Code, Hugging Face, and arXiv buttons once the public artifacts are ready.</p>
+            </div> -->
+        </div>
+    </div>
+
+    <div class="container blog main">
+        <h1>Citation</h1>
+<pre><code class="plaintext">@article{drift2026,
+  title={DRIFT: A Residual Flow Adapter for Decoding Continuous Outputs in Vision-Language Models},
+  author={Liu, Zhuoming and Lin, Jinhong and Cheng, Kwan Man and Zhang, Lin and Bagchi, Shayok and Li, Yin},
+  journal={arXiv preprint},
+  year={2026}
+}</code></pre>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>
+                This website is built on the <a href="https://shikun.io/projects/clarity">Clarity Template</a>, designed by <a href="https://shikun.io/">Shikun Liu</a>.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
