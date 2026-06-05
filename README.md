@@ -48,5 +48,4 @@ The project page is provided in [Here](https://dragonlzm.github.io/DRIFT/). It i
 ```
 
 ## Contact
-
-Please open an issue once the repository is public, or contact the authors for questions about the project.
+Zhuoming Liu (zliu2346@wisc.edu)
