@@ -12,8 +12,8 @@
 </p>
 
 <p align="center">
-  <a href="https://dragonlzm.github.io/zhuomingliu.github.io/">Zhuoming Liu</a><sup>1*</sup>, <a href="https://jonneslin.github.io/">Jinhong Lin</a><sup>1*</sup>, <a href="#">Kwan Man Cheng</a><sup>1</sup>, <a href="https://lzhangbj.github.io/">Lin Zhang</a><sup>1</sup>, <a href="#">Shayok Bagchi</a><sup>2</sup>, <a href="https://www.biostat.wisc.edu/~yli/">Yin Li</a><sup>1</sup>
-  <p align="center"><sup>1</sup>University of Wisconsin-Madison <sup>2</sup>Independent Researcher <sup>*</sup>Co-first Author</p> 
+  <a href="https://dragonlzm.github.io/zhuomingliu.github.io/">Zhuoming Liu</a><sup>1*</sup>, <a href="https://jonneslin.github.io/">Jinhong Lin</a><sup>1*</sup>, <a href="#">Kwan Man Cheng</a><sup>1*</sup>, <a href="https://lzhangbj.github.io/">Lin Zhang</a><sup>1</sup>, <a href="#">Shayok Bagchi</a><sup>2</sup>, <a href="https://www.biostat.wisc.edu/~yli/">Yin Li</a><sup>1</sup>
+  <p align="center"><sup>1</sup>University of Wisconsin-Madison <sup>2</sup>West Lafayette Jr./Sr. High School<sup>*</sup>Co-first Author</p> 
 </p>
 
 
@@ -29,7 +29,6 @@ DRIFT combines a base predictor, which provides a coarse estimate of the target 
 - **Continuous decoding for VLMs:** Adapts discrete autoregressive vision-language backbones to precise continuous prediction tasks.
 - **Residual flow refinement:** Uses flow matching to iteratively refine coarse predictions rather than replacing the pretrained model interface.
 - **Broad task coverage:** Prepared for VLA, temporal video grounding, and spatial grounding demonstrations.
-- **arXiv preprint:** The paper is available at [arXiv:2606.05758](https://arxiv.org/abs/2606.05758).
 
 ## Project Page
 
