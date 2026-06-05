@@ -5,7 +5,7 @@
 <h1 align="center">DRIFT: A Residual Flow Adapter for Decoding Continuous Outputs in Vision-Language Models</h1>
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/arXiv-Coming%20Soon-red"></a>
+  <a href="https://arxiv.org/abs/2606.05758"><img src="https://img.shields.io/badge/arXiv-2606.05758-red"></a>
   <a href="https://dragonlzm.github.io/DRIFT/"><img src="https://img.shields.io/badge/Project-Page-brightgreen"></a>
   <a href="#"><img src="https://img.shields.io/badge/Code-Coming%20Soon-blue"></a>
   <a href="#"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Coming%20Soon-purple"></a>
@@ -29,7 +29,7 @@ DRIFT combines a base predictor, which provides a coarse estimate of the target 
 - **Continuous decoding for VLMs:** Adapts discrete autoregressive vision-language backbones to precise continuous prediction tasks.
 - **Residual flow refinement:** Uses flow matching to iteratively refine coarse predictions rather than replacing the pretrained model interface.
 - **Broad task coverage:** Prepared for VLA, temporal video grounding, and spatial grounding demonstrations.
-- **Release slots ready:** Code, Hugging Face artifacts, and arXiv links will be added once public.
+- **arXiv preprint:** The paper is available at [arXiv:2606.05758](https://arxiv.org/abs/2606.05758).
 
 ## Project Page
 
@@ -41,7 +41,9 @@ The project page is provided in [Here](https://dragonlzm.github.io/DRIFT/). It i
 @article{drift2026,
   title={DRIFT: A Residual Flow Adapter for Decoding Continuous Outputs in Vision-Language Models},
   author={Liu, Zhuoming and Lin, Jinhong and Cheng, Kwan Man and Zhang, Lin and Bagchi, Shayok and Li, Yin},
-  journal={arXiv preprint},
+  journal={arXiv preprint arXiv:2606.05758},
+  eprint={2606.05758},
+  archivePrefix={arXiv},
   year={2026}
 }
 ```
