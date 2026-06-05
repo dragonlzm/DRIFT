@@ -13,7 +13,7 @@
 
 <p align="center">
   <a href="https://dragonlzm.github.io/zhuomingliu.github.io/">Zhuoming Liu</a><sup>1*</sup>, <a href="https://jonneslin.github.io/">Jinhong Lin</a><sup>1*</sup>, <a href="#">Kwan Man Cheng</a><sup>1*</sup>, <a href="https://lzhangbj.github.io/">Lin Zhang</a><sup>1</sup>, <a href="#">Shayok Bagchi</a><sup>2</sup>, <a href="https://www.biostat.wisc.edu/~yli/">Yin Li</a><sup>1</sup>
-  <p align="center"><sup>1</sup>University of Wisconsin-Madison <sup>2</sup>West Lafayette Jr./Sr. High School<sup>*</sup>Co-first Author</p> 
+  <p align="center"><sup>1</sup>University of Wisconsin-Madison <sup>2</sup>West Lafayette Jr./Sr. High School  <sup>*</sup>Co-first Author</p> 
 </p>
 
 
